@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منظم حياتي</title>
+
+<style>
+:root{
+--bg:#0b1220;
+--panel:#151f32;
+--panel2:#1c2940;
+--text:#f4f7ff;
+--muted:#aab7cc;
+--accent:#64d6b0;
+--blue:#6ca8ff;
+--border:#2c3a52;
+}
+*{box-sizing:border-box}
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:linear-gradient(135deg,#0b1220,#14243a);
+color:var(--text);
+min-height:100vh
+}
+header{
+text-align:center;
+padding:22px;
+background:#111c2e;
+border-bottom:1px solid var(--border)
+}
+header h1{margin:0 0 8px}
+nav{
+display:flex;
+gap:8px;
+padding:12px;
+overflow-x:auto;
+background:#101a2b;
+position:sticky;
+top:0;
+z-index:5
+}
+nav button{
+white-space:nowrap;
+background:var(--panel);
+color:white;
+border:1px solid var(--border);
+padding:11px 15px;
+border-radius:12px
+}
+nav button.active{
+background:var(--accent);
+color:#09251d
+}
+main{max-width:1100px;margin:auto;padding:15px}
+.page{display:none}
+.page.active{display:block}
+.card{
+background:var(--panel);
+border:1px solid var(--border);
+border-radius:17px;
+padding:17px;
+margin-bottom:14px
+}
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+gap:12px
+}
+.stat{
+background:var(--panel2);
+padding:15px;
+border-radius:13px
+}
+.stat strong{
+display:block;
+color:var(--accent);
+font-size:23px;
+margin-top:8px
+}
+button{
+border:0;
+border-radius:10px;
+padding:11px 15px;
+cursor:pointer;
+font-weight:bold;
+margin:3px
+}
+.primary{background:var(--accent);color:#08251d}
+.secondary{background:var(--blue);color:#071b36}
+.danger{background:#743943;color:white}
+input,textarea,select{
+width:100%;
+padding:12px;
+border-radius:10px;
+border:1px solid var(--border);
+background:#0e192b;
+color:white;
+margin:7px 0 12px;
+font-size:15px
+}
+label{display:block;margin-top:10px}
+.muted{color:var(--muted);font-size:13px}
+.good{color:var(--accent)}
+.prayer-card{
+background:var(--panel2);
+padding:14px;
+border-radius:13px;
+margin:10px 0;
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+flex-wrap:wrap
+}
+.done{border:1px solid var(--accent)}
+.counter{
+text-align:center;
+background:var(--panel2);
+padding:20px;
+border-radius:15px;
+margin:12px 0
+}
+.counter strong{
+display:block;
+font-size:35px;
+color:var(--accent);
+margin:10px
+}
+.checkline{
+display:flex;
+align-items:center;
+gap:10px
+}
+.checkline input{width:auto}
+table{
+width:100%;
+border-collapse:collapse;
+min-width:600px
+}
+th,td{
+padding:11px;
+text-align:center;
+border-bottom:1px solid var(--border)
+}
+th{color:var(--accent);background:#23334d}
+.table-wrap{overflow-x:auto}
+footer{text-align:center;padding:20px;color:var(--muted)}
+@media(max-width:600px){
+main{padding:9px}
+.card{padding:13px}
+}
+@media print{
+nav,header button,button{display:none!important}
+body{background:white;color:black}
+.page{display:none!important}
+.page.active{display:block!important}
+.card{background:white;color:black}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>منظم حياتي اليومي 🌙</h1>
+<p>نظّم عبادتك ومذاكرتك وحياتك</p>
+<p id="date"></p>
+<h2 id="clock"></h2>
+</header>
+
+<nav>
+<button class="active" onclick="show('prayers',this)">الصلوات</button>
+<button onclick="show('azkar',this)">الأذكار</button>
+<button onclick="show('gym',this)">الجيم</button>
+<button onclick="show('tasks',this)">المذاكرة والأهداف</button>
+<button onclick="show('sleep',this)">النوم</button>
+<button onclick="show('weekly',this)">التقرير الأسبوعي</button>
+<button onclick="show('monthly',this)">التقرير الشهري</button>
+</nav>
+
+<main>
+
+<!-- إضافة الإشعارات فقط -->
+<div class="card">
+<h2>🔔 إشعارات منظم حياتي</h2>
+<p>فعّل الإشعارات لاستقبال التذكيرات</p>
+<button class="primary" onclick="enableNotifications()">
+تفعيل الإشعارات
+</button>
+<p id="notificationStatus" class="muted">
+الإشعارات غير مفعلة
+</p>
+</div>
+
+<!-- الصلوات وقيام الليل -->
+<section id="prayers" class="page active">
+
+<div class="card">
+<h2>🕌 الصلوات الخمس</h2>
+<p class="muted">مواقيت الصلاة حسب مشتول السوق، الشرقية، مصر</p>
+<p id="prayerStatus">جاري تحميل المواقيت...</p>
+<div id="prayerList"></div>
+</div>
+
+<div class="card">
+<h2>🌙 قيام الليل</h2>
+<p id="qiyamStatus">لم يتم تسجيل قيام الليل اليوم.</p>
+
+<label>عدد الركعات</label>
+<input type="number" id="rakaat" value="2" min="1">
+
+<label>ملاحظات</label>
+<textarea id="qNote"></textarea>
+
+<button class="primary" onclick="saveQiyam()">سجلت قيام الليل</button>
+</div>
+
+</section>
+
+<!-- الأذكار -->
+<section id="azkar" class="page">
+
+<div class="card">
+<h2>📿 أذكار الصباح</h2>
+<div id="morning"></div>
+</div>
+
+<div class="card">
+<h2>🌇 أذكار المساء</h2>
+<div id="evening"></div>
+</div>
+
+<div class="card">
+<h2>📚 أذكار قبل المذاكرة</h2>
+<div id="studyAzkar"></div>
+</div>
+
+<div class="card">
+<h2>سبحان الله وبحمده، سبحان الله العظيم</h2>
+<p class="muted">العدد المطلوب 100 مرة</p>
+<div class="counter">
+<strong id="tasbeeh">100</strong>
+<p>المتبقي من 100</p>
+<button class="primary" onclick="tasbeehClick()">سبّح ✓</button>
+<button class="secondary" onclick="resetTasbeeh()">إعادة العداد</button>
+</div>
+</div>
+
+<div class="card">
+<h2>الاستغفار 📿</h2>
+<label>اكتب صيغة الاستغفار</label>
+<input id="istName" placeholder="مثلاً: أستغفر الله وأتوب إليه">
+<button class="primary" onclick="addIst()">إضافة الاستغفار</button>
+<div id="istList"></div>
+</div>
+
+</section>
+
+<!-- الجيم -->
+<section id="gym" class="page">
+<div class="card">
+<h2>🏋️ متابعة الجيم</h2>
+
+<label class="checkline">
+<input type="checkbox" id="gymDone">
+ذهبت إلى الجيم اليوم
+</label>
+
+<label>وقت الذهاب</label>
+<input type="time" id="gymTime">
+
+<label>ملاحظات</label>
+<textarea id="gymNote"></textarea>
+
+<button class="primary" onclick="saveGym()">حفظ</button>
+<p id="gymStatus"></p>
+</div>
+</section>
+
+<!-- المذاكرة والأهداف -->
+<section id="tasks" class="page">
+<div class="card">
+<h2>📚 المذاكرة والأهداف</h2>
+
+<label>اسم المهمة</label>
+<input id="taskName" placeholder="اكتب المهمة">
+
+<label>نوع المهمة</label>
+<select id="taskType">
+<option>مذاكرة</option>
+<option>هدف يومي</option>
+<option>هدف أسبوعي</option>
+<option>هدف شهري</option>
+</select>
+
+<button class="primary" onclick="addTask()">إضافة مهمة</button>
+<div id="taskList"></div>
+</div>
+</section>
+
+<!-- النوم -->
+<section id="sleep" class="page">
+<div class="card">
+<h2>😴 متابعة النوم</h2>
+
+<label>وقت النوم</label>
+<input type="time" id="sleepTime">
+
+<label>وقت الاستيقاظ</label>
+<input type="time" id="wakeTime">
+
+<button class="primary" onclick="saveSleep()">حفظ النوم</button>
+
+<h3 id="sleepResult"></h3>
+</div>
+</section>
+
+<!-- التقرير الأسبوعي -->
+<section id="weekly" class="page">
+<div class="card">
+<h2>📊 التقرير الأسبوعي</h2>
+<p id="weekDates" class="muted"></p>
+<div id="weeklySummary" class="grid"></div>
+<button class="primary" onclick="renderReports()">تحديث التقرير</button>
+<button class="secondary" onclick="window.print()">حفظ PDF</button>
+</div>
+
+<div class="card">
+<h3>تفاصيل الصلوات</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>اليوم</th>
+<th>الصلاة</th>
+<th>الأذان</th>
+<th>وقت الصلاة</th>
+<th>التأخير</th>
+</tr>
+</thead>
+<tbody id="weeklyRows"></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- التقرير الشهري -->
+<section id="monthly" class="page">
+<div class="card">
+<h2>📅 التقرير الشهري</h2>
+<p id="monthDates" class="muted"></p>
+<div id="monthlySummary" class="grid"></div>
+<button class="primary" onclick="renderReports()">تحديث التقرير</button>
+<button class="secondary" onclick="window.print()">حفظ PDF</button>
+</div>
+</section>
+
+</main>
+
+<footer>منظم حياتي ❤️</footer>
+
+<!-- مكتبات Firebase الخاصة بالإشعارات -->
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js"></script>
+
+<script>
+
+// أدوات التخزين
+function get(key,def){
+try{return JSON.parse(localStorage.getItem(key))??def}
+catch(e){return def}
+}
+
+function put(key,val){
+localStorage.setItem(key,JSON.stringify(val))
+}
+
+function today(){
+return dateKey(new Date())
+}
+
+function dateKey(d){
+return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")
+}
+
+function timeNow(){
+let d=new Date()
+return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")
+}
+
+function fmt(t){
+if(!t)return "—"
+let [h,m]=t.split(":").map(Number)
+return (h%12||12)+":"+String(m).padStart(2,"0")+(h>=12?" م":" ص")
+}
+
+function minutes(t){
+if(!t)return null
+let [h,m]=t.split(":").map(Number)
+return h*60+m
+}
+
+function delayText(n){
+if(n==null)return "—"
+if(n<0)return "قبل الأذان"
+return Math.floor(n/60)+" ساعة و"+(n%60)+" دقيقة"
+}
+
+function safe(s){
+return String(s).replace(/[&<>"']/g,c=>({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#39;"
+}[c]))
+}
+
+// التنقل
+function show(id,btn){
+document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"))
+document.getElementById(id).classList.add("active")
+document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"))
+if(btn)btn.classList.add("active")
+if(id==="weekly"||id==="monthly")renderReports()
+}
+
+// الساعة والتاريخ
+function updateClock(){
+let d=new Date()
+document.getElementById("clock").textContent=d.toLocaleTimeString("ar-EG")
+document.getElementById("date").textContent=d.toLocaleDateString("ar-EG",{
+weekday:"long",
+year:"numeric",
+month:"long",
+day:"numeric"
+})
+}
+
+setInterval(updateClock,1000)
+updateClock()
+
+// البيانات
+let prayerLogs=get("prayerLogs",{})
+let qiyamLogs=get("qiyamLogs",{})
+let gymLogs=get("gymLogs",{})
+let sleepLogs=get("sleepLogs",{})
+let tasks=get("tasks",[])
+let azkarLogs=get("azkarLogs",{})
+let istList=get("istList",[])
+let tasbeehLogs=get("tasbeehLogs",{})
+
+const prayers=[
+["Fajr","الفجر"],
+["Dhuhr","الظهر"],
+["Asr","العصر"],
+["Maghrib","المغرب"],
+["Isha","العشاء"]
+]
+
+let todayTimes={}
+
+// مواقيت الصلاة
+async function loadPrayers(){
+try{
+let d=today().split("-")
+let address="Mashtoul El Souq, Ash Sharqia, Egypt"
+let url=`https://api.aladhan.com/v1/timingsByAddress/${d[2]}-${d[1]}-${d[0]}?address=${encodeURIComponent(address)}&method=5`
+let response=await fetch(url)
+let data=await response.json()
+
+if(data.code!==200)throw Error()
+
+prayers.forEach(p=>{
+todayTimes[p[0]]=data.data.timings[p[0]].split(" ")[0].slice(0,5)
+})
+
+document.getElementById("prayerStatus").textContent="تم تحميل مواقيت الصلاة"
+renderPrayers()
+
+}catch(e){
+document.getElementById("prayerStatus").textContent="تعذر تحميل المواقيت. تحقق من الإنترنت."
+}
+}
+
+function renderPrayers(){
+let log=prayerLogs[today()]||{}
+
+document.getElementById("prayerList").innerHTML=prayers.map(p=>{
+let entry=log[p[0]]
+let t=todayTimes[p[0]]
+
+return `<div class="prayer-card ${entry?"done":""}">
+<div>
+<strong>${p[1]}</strong>
+<p class="muted">الأذان: ${fmt(t)}</p>
+<p class="muted">${entry?"تمت الصلاة الساعة "+fmt(entry.time):"لم تسجل بعد"}</p>
+${entry?`<p class="good">التأخير: ${delayText(entry.delay)}</p>`:""}
+</div>
+
+<button class="primary" ${entry?"disabled":""} onclick="markPrayer('${p[0]}')">
+${entry?"✓ تم":"صليت"}
+</button>
+</div>`
+}).join("")
+}
+
+function markPrayer(key){
+if(!todayTimes[key]){
+alert("انتظر تحميل مواقيت الصلاة")
+return
+}
+
+let now=timeNow()
+let diff=minutes(now)-minutes(todayTimes[key])
+let log=prayerLogs[today()]||{}
+
+if(log[key])return
+
+log[key]={time:now,adhan:todayTimes[key],delay:diff}
+prayerLogs[today()]=log
+
+put("prayerLogs",prayerLogs)
+renderPrayers()
+}
+
+// قيام الليل
+function saveQiyam(){
+qiyamLogs[today()]={
+time:timeNow(),
+rakaat:document.getElementById("rakaat").value,
+note:document.getElementById("qNote").value
+}
+
+put("qiyamLogs",qiyamLogs)
+renderQiyam()
+}
+
+function renderQiyam(){
+let q=qiyamLogs[today()]
+
+document.getElementById("qiyamStatus").innerHTML=q?
+`<span class="good">تم الإنجاز ✓</span><br>
+وقت الصلاة: ${fmt(q.time)}<br>
+عدد الركعات: ${safe(q.rakaat)}`
+:"لم يتم تسجيل قيام الليل اليوم."
+}
+
+// الأذكار
+const morning=[
+"أصبحنا وأصبح الملك لله والحمد لله.",
+"اللهم بك أصبحنا وبك أمسينا وبك نحيا وبك نموت وإليك النشور.",
+"رضيت بالله ربًا وبالإسلام دينًا وبمحمد ﷺ نبيًا.",
+"آية الكرسي.",
+"سورة الإخلاص والفلق والناس."
+]
+
+const evening=[
+"أمسينا وأمسى الملك لله والحمد لله.",
+"اللهم بك أمسينا وبك أصبحنا وبك نحيا وبك نموت وإليك المصير.",
+"رضيت بالله ربًا وبالإسلام دينًا وبمحمد ﷺ نبيًا.",
+"آية الكرسي.",
+"سورة الإخلاص والفلق والناس."
+]
+
+const study=[
+"رب اشرح لي صدري ويسر لي أمري.",
+"اللهم انفعني بما علمتني وعلمني ما ينفعني وزدني علمًا.",
+"اللهم لا سهل إلا ما جعلته سهلاً."
+]
+
+function renderAzkarGroup(arr,id){
+document.getElementById(id).innerHTML=arr.map((z,i)=>{
+let k=id+"-"+i
+let done=azkarLogs[today()]?.[k]
+
+return `<div class="prayer-card">
+<span>${safe(z)}</span>
+<label class="checkline">
+<input type="checkbox" ${done?"checked":""} onchange="toggleZikr('${k}',this.checked)">
+تم
+</label>
+</div>`
+}).join("")
+}
+
+function toggleZikr(k,v){
+azkarLogs[today()]=azkarLogs[today()]||{}
+azkarLogs[today()][k]=v
+put("azkarLogs",azkarLogs)
+}
+
+// التسبيح
+function tasbeehClick(){
+let n=tasbeehLogs[today()]??0
+if(n>=100)return
+
+tasbeehLogs[today()]=n+1
+put("tasbeehLogs",tasbeehLogs)
+renderTasbeeh()
+}
+
+function resetTasbeeh(){
+tasbeehLogs[today()]=0
+put("tasbeehLogs",tasbeehLogs)
+renderTasbeeh()
+}
+
+function renderTasbeeh(){
+let n=tasbeehLogs[today()]??0
+document.getElementById("tasbeeh").textContent=100-n
+}
+
+// الاستغفار
+function addIst(){
+let name=document.getElementById("istName").value.trim()
+if(!name)return alert("اكتب صيغة الاستغفار")
+
+istList.push({id:Date.now(),name:name,count:0})
+put("istList",istList)
+
+document.getElementById("istName").value=""
+renderIst()
+}
+
+function countIst(id){
+istList=istList.map(x=>x.id===id?{...x,count:x.count+1}:x)
+put("istList",istList)
+renderIst()
+}
+
+function deleteIst(id){
+istList=istList.filter(x=>x.id!==id)
+put("istList",istList)
+renderIst()
+}
+
+function renderIst(){
+document.getElementById("istList").innerHTML=istList.map(x=>
+`<div class="counter">
+<strong>${x.count}</strong>
+<p>${safe(x.name)}</p>
+<button class="primary" onclick="countIst(${x.id})">استغفر الله ✓</button>
+<button class="danger" onclick="deleteIst(${x.id})">حذف</button>
+</div>`
+).join("")||"<p class='muted'>أضف صيغة الاستغفار الخاصة بك.</p>"
+}
+
+// الجيم
+function saveGym(){
+gymLogs[today()]={
+done:document.getElementById("gymDone").checked,
+time:document.getElementById("gymTime").value,
+note:document.getElementById("gymNote").value
+}
+
+put("gymLogs",gymLogs)
+renderGym()
+}
+
+function renderGym(){
+let g=gymLogs[today()]
+
+document.getElementById("gymDone").checked=!!g?.done
+document.getElementById("gymTime").value=g?.time||""
+document.getElementById("gymNote").value=g?.note||""
+
+document.getElementById("gymStatus").textContent=
+g?.done?"تم تسجيل الجيم ✓":"لم يتم تسجيل الجيم"
+}
+
+// المهام
+function addTask(){
+let name=document.getElementById("taskName").value.trim()
+if(!name)return alert("اكتب اسم المهمة")
+
+tasks.push({
+id:Date.now(),
+name,
+type:document.getElementById("taskType").value,
+done:false,
+date:today()
+})
+
+put("tasks",tasks)
+document.getElementById("taskName").value=""
+renderTasks()
+}
+
+function toggleTask(id){
+tasks=tasks.map(t=>t.id===id?{...t,done:!t.done}:t)
+put("tasks",tasks)
+renderTasks()
+}
+
+function deleteTask(id){
+tasks=tasks.filter(t=>t.id!==id)
+put("tasks",tasks)
+renderTasks()
+}
+
+function renderTasks(){
+document.getElementById("taskList").innerHTML=tasks.map(t=>
+`<div class="prayer-card ${t.done?"done":""}">
+<div>
+<strong>${safe(t.name)}</strong>
+<p class="muted">${safe(t.type)}</p>
+${t.done?'<span class="good">✓ تم الإنجاز</span>':""}
+</div>
+
+<button class="primary" onclick="toggleTask(${t.id})">
+${t.done?"إلغاء الإنجاز":"تم الإنجاز"}
+</button>
+
+<button class="danger" onclick="deleteTask(${t.id})">حذف</button>
+</div>`
+).join("")||"<p class='muted'>لا توجد مهام بعد.</p>"
+}
+
+// النوم
+function saveSleep(){
+let s=document.getElementById("sleepTime").value
+let w=document.getElementById("wakeTime").value
+
+if(!s||!w)return alert("أدخل وقت النوم والاستيقاظ")
+
+let duration=(minutes(w)-minutes(s)+1440)%1440
+
+sleepLogs[today()]={sleep:s,wake:w,duration}
+put("sleepLogs",sleepLogs)
+
+document.getElementById("sleepResult").textContent=
+"مدة النوم: "+Math.floor(duration/60)+" ساعة و"+duration%60+" دقيقة"
+}
+
+function renderSleep(){
+let x=sleepLogs[today()]
+
+document.getElementById("sleepTime").value=x?.sleep||""
+document.getElementById("wakeTime").value=x?.wake||""
+
+if(x)document.getElementById("sleepResult").textContent=
+"مدة النوم: "+Math.floor(x.duration/60)+" ساعة و"+x.duration%60+" دقيقة"
+}
+
+// حساب بداية الأسبوع السبت
+function weekStart(){
+let d=new Date()
+d.setHours(0,0,0,0)
+let day=d.getDay()
+d.setDate(d.getDate()-((day+1)%7))
+return d
+}
+
+function dateRange(start,end){
+let arr=[]
+let d=new Date(start)
+
+while(d<=end){
+arr.push(new Date(d))
+d.setDate(d.getDate()+1)
+}
+
+return arr
+}
+
+function averageSleep(days){
+let values=days.map(d=>sleepLogs[dateKey(d)]?.duration)
+.filter(x=>Number.isFinite(x))
+
+if(!values.length)return null
+
+return values.reduce((a,b)=>a+b,0)/values.length
+}
+
+function avgText(n){
+if(n===null)return "لا توجد بيانات"
+return Math.floor(n/60)+" ساعة و"+Math.round(n%60)+" دقيقة"
+}
+
+function reportSummary(days){
+let keys=days.map(dateKey)
+let prayersCount=0,delays=[],gymCount=0,tasksCount=0,qCount=0
+
+keys.forEach(k=>{
+let p=prayerLogs[k]||{}
+prayersCount+=Object.keys(p).length
+
+Object.values(p).forEach(x=>delays.push(x.delay))
+
+if(gymLogs[k]?.done)gymCount++
+if(qiyamLogs[k])qCount++
+})
+
+tasksCount=tasks.filter(t=>keys.includes(t.date)&&t.done).length
+
+let avgDelay=delays.length?
+delays.reduce((a,b)=>a+b,0)/delays.length:null
+
+return {
+prayersCount,
+gymCount,
+qCount,
+tasksCount,
+avgDelay,
+sleep:averageSleep(days)
+}
+}
+
+function stat(title,value){
+return `<div class="stat">${title}<strong>${value}</strong></div>`
+}
+
+// التقرير الأسبوعي والشهري
+function renderReports(){
+let now=new Date()
+let start=weekStart()
+let weeklyDays=dateRange(start,now)
+let ws=reportSummary(weeklyDays)
+
+document.getElementById("weekDates").textContent=
+"من السبت "+start.toLocaleDateString("ar-EG")+" حتى "+now.toLocaleDateString("ar-EG")
+
+document.getElementById("weeklySummary").innerHTML=
+stat("الصلوات المسجلة",ws.prayersCount)+
+stat("متوسط التأخير",ws.avgDelay===null?"لا يوجد":delayText(Math.round(ws.avgDelay)))+
+stat("متوسط النوم",avgText(ws.sleep))+
+stat("مرات الجيم",ws.gymCount)+
+stat("قيام الليل",ws.qCount)+
+stat("المهام المنجزة",ws.tasksCount)
+
+let rows=""
+
+weeklyDays.forEach(d=>{
+let k=dateKey(d)
+let log=prayerLogs[k]||{}
+
+prayers.forEach(p=>{
+let x=log[p[0]]
+
+rows+=`<tr>
+<td>${d.toLocaleDateString("ar-EG",{weekday:"long",day:"numeric"})}</td>
+<td>${p[1]}</td>
+<td>${fmt(x?.adhan)}</td>
+<td>${fmt(x?.time)}</td>
+<td>${x?delayText(x.delay):"لم تسجل"}</td>
+</tr>`
+})
+})
+
+document.getElementById("weeklyRows").innerHTML=rows
+
+let monthStart=new Date(now.getFullYear(),now.getMonth(),1)
+let monthlyDays=dateRange(monthStart,now)
+let ms=reportSummary(monthlyDays)
+
+document.getElementById("monthDates").textContent=
+"من "+monthStart.toLocaleDateString("ar-EG")+" حتى "+now.toLocaleDateString("ar-EG")
+
+document.getElementById("monthlySummary").innerHTML=
+stat("الصلوات المسجلة",ms.prayersCount)+
+stat("متوسط التأخير",ms.avgDelay===null?"لا يوجد":delayText(Math.round(ms.avgDelay)))+
+stat("متوسط النوم",avgText(ms.sleep))+
+stat("مرات الجيم",ms.gymCount)+
+stat("قيام الليل",ms.qCount)+
+stat("المهام المنجزة",ms.tasksCount)
+}
+
+// =================================
+// Firebase Notifications
+// =================================
+
+const firebaseConfig = {
+apiKey: "AIzaSyDbnI1u1GmYthIwcJSui9uHR4XrAuNCNu0",
+authDomain: "my-daily-life-77fbc.firebaseapp.com",
+projectId: "my-daily-life-77fbc",
+storageBucket: "my-daily-life-77fbc.firebasestorage.app",
+messagingSenderId: "497301936208",
+appId: "1:497301936208:web:4b5230bc7c0596a123d955"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const messaging = firebase.messaging();
+
+async function enableNotifications(){
+const status=document.getElementById("notificationStatus");
+
+try{
+
+if(!("Notification" in window)){
+status.textContent="المتصفح لا يدعم الإشعارات";
+return;
+}
+
+if(!("serviceWorker" in navigator)){
+status.textContent="المتصفح لا يدعم Service Worker";
+return;
+}
+
+const permission=await Notification.requestPermission();
+
+if(permission!=="granted"){
+status.textContent="لم يتم السماح بالإشعارات";
+return;
+}
+
+const registration=await navigator.serviceWorker.register(
+"./firebase-messaging-sw.js"
+);
+
+const token=await messaging.getToken({
+vapidKey:"BBgz0rlrEsYX8vq_uetykRSj8B5xh0DCnfRm-lLCowQtDeCnzM4NuD4hxd7mJ6haOhqG99GmEM8UvzTigjzz4I0",
+serviceWorkerRegistration:registration
+});
+
+if(token){
+localStorage.setItem("fcmToken",token);
+status.textContent="تم تفعيل الإشعارات بنجاح ✓";
+}else{
+status.textContent="تعذر الحصول على رمز الإشعارات";
+}
+
+}catch(error){
+console.error(error);
+status.textContent="حدث خطأ في تفعيل الإشعارات";
+}
+}
+
+messaging.onMessage(async(payload)=>{
+const registration=await navigator.serviceWorker.ready;
+
+registration.showNotification(
+payload.notification?.title||"منظم حياتي 🌙",
+{
+body:payload.notification?.body||"عندك تذكير جديد",
+icon:"./icon.png"
+}
+);
+});
+
+// تشغيل التطبيق
+loadPrayers();
+renderQiyam();
+renderAzkarGroup(morning,"morning");
+renderAzkarGroup(evening,"evening");
+renderAzkarGroup(study,"studyAzkar");
+renderTasbeeh();
+renderIst();
+renderGym();
+renderTasks();
+renderSleep();
+renderReports();
+
+</script>
+
+</body>
+</html>
